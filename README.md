@@ -1,4 +1,4 @@
-#pybooru
+# pybooru
 
 Module to access booru sites APIs.
 

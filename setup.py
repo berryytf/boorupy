@@ -1,15 +1,15 @@
 from distutils .core import setup
 
 setup(
-  name = 'boorusnake',         # How you named your package folder (MyLib)
-  packages = ['boorusnake'],   # Chose the same as "name"
+  name = 'snakebooru',         # How you named your package folder (MyLib)
+  packages = ['snakebooru'],   # Chose the same as "name"
   version = '0.1.0',      # Start with a small number and increase it with every change you make
   license='gpl-3.0',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'Module to access various booru sites APIs.',   # Give a short description about your library
   author = 'berryytf',                   # Type in your name
   author_email = 'gabe@kjsl.org',      # Type in your E-Mail
-  url = 'https://github.com/berryytf/boorusnake',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/berryytf/boorusnake/archive/v0.1.tar.gz',    # I explain this later on
+  url = 'https://github.com/berryytf/snakebooru',   # Provide either the link to your github or to your website
+  download_url = 'https://github.com/berryytf/snakebooru/archive/v0.1.tar.gz',    # I explain this later on
   keywords = ['Booru', 'Anime', 'Imageboard', 'NSFW'],   # Keywords that define your package best
   install_requires=[],
   classifiers=[

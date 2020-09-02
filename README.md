@@ -77,5 +77,24 @@ result = gelbooru.get_random_post()
   'Post 1 URL': 'https://gelbooru.com/index.php?page=post&s=view&id=5519568'}]
 
 ```
+### Search comments
 
+Search for comments from a post. 
 
+```python
+
+from snakebooru.gelbooru import Gelbooru
+# User ID and API key are optional. Access may be limited without them
+# You can find both of these at https://gelbooru.com/index.php?page=account&s=home in Options
+# Registration is required to obtain them. 
+gelbooru = Gelbooru(api_key='API KEY', user_id='USER ID')
+
+# post_id is required
+results = gelbooru.get_comments(post_id=4446958)
+[{'author': 'Anonymous', 
+'comment': '[Insert witty, sexually suggestive pun here]'}, 
+{'author': 'Anonymous', 
+'comment': 'Order for, Hannibal Lecter!'}, 
+{'author': 'unjuke8', 
+'comment': "MmmMmm! Taco 'bout it!"}]
+```

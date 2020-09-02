@@ -9,7 +9,7 @@ setup(
   author = 'berryytf',                   # Type in your name
   author_email = 'gabe@kjsl.org',      # Type in your E-Mail
   url = 'https://github.com/berryytf/snakebooru',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/berryytf/snakebooru/archive/v0.1.1-alpha.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/berryytf/snakebooru/archive/v0.1.2-alpha.tar.gz',    # I explain this later on
   keywords = ['Booru', 'Anime', 'Imageboard', 'NSFW'],   # Keywords that define your package best
   install_requires=[],
   classifiers=[

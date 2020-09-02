@@ -84,6 +84,3 @@ class Gelbooru:
             temp += 1
         
         return image_list # Returns image URL(s) and post URL(s) in a list
-    
-    def testing(self):
-        print(self.api_key)

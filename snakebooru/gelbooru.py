@@ -2,6 +2,7 @@ import json
 import urllib.request as urlreq
 from random import randint
 from typing import *
+import xml.etree.ElementTree as ET
 
 """
 Works with gelbooru API.
@@ -13,6 +14,7 @@ class Gelbooru:
         self.user_id = user_id
         self.page_num = randint(0, 19)
         self.booru_url = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1'
+        self.comment_url = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
 
     def __tagifier(self, unformated_tags):
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
@@ -76,6 +78,28 @@ class Gelbooru:
         image = self.__link_images(json_response)
         return image
         
+    # Get comments from a post using post_id
+    def get_comments(self, post_id):
+        comment_list = []
+        final_url = self.comment_url + f'&post_id={post_id}'
+        urlobj = urlreq.urlopen(final_url)
+        data = ET.parse(urlobj)
+        urlobj.close()
+        root = data.getroot()
+        temp = dict()
+        
+        # Iterate through comments
+        for i in range(len(root)):
+            temp['author'] = root[i].attrib['creator']
+            temp['comment'] = root[i].attrib['body']
+            comment_list.append(temp)
+            temp = dict()
+
+        if len(comment_list) == 0:
+            return "No comments found"
+        else:
+            return comment_list #return list of dictionaries
+
     # Private function to create a post URL and a related image URL
     def __link_images(self, response):
         image_list = []
@@ -90,3 +114,4 @@ class Gelbooru:
             temp += 1
         
         return image_list # Returns image URL(s) and post URL(s) in a list
+    

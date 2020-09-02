@@ -7,9 +7,9 @@ Working on Gelbooru support at the moment.
 
 # Gelbooru
 
-**Currently developing this part**
+## Currently developing this part
 
-**Searching**
+### Searching
 
 Currently, you can use the module to search images on Gelbooru.
 
@@ -37,7 +37,7 @@ results = gelbooru.get_posts(tags='cat ears, blue eyes, rating:safe', limit=5)
   ...
 ```
 
-**Search single post**
+### Search single post
 
 Search single post with tags without having to use limit
 Works similarly to get_random_post if you do not pass any arguments.
@@ -56,7 +56,7 @@ result = gelbooru.get_single_post(tags='cat ears, blue eyes, rating:safe')
 
 ```
 
-**Search random post**
+### Search random post
 
 Search a random post. No arguments.
 

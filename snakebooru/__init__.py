@@ -1,1 +1,1 @@
-from boorusnake.gelbooru import Gelbooru
+from snakebooru.gelbooru import Gelbooru

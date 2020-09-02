@@ -40,6 +40,7 @@ results = gelbooru.get_posts(tags='cat ears, blue eyes, rating:safe', limit=5)
 **Search single post**
 
 Search single post with tags without having to use limit
+Works similarly to get_random_post if you do not pass any arguments.
 
 ```python
 

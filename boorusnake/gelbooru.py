@@ -1,36 +1,34 @@
 import json
 import urllib.request as urlreq
-import random
+from random import randint
+
 
 
 """
 Works with gelbooru API.
 """
 
-class gbooru:
-    def __init__(self, limit=5, tags='', post_id=0):
-        self.limit = limit
-        self.tags = tags
-        self.post_id = post_id
-        self.page_num = random.randint(0, 19)
+class Gelbooru:
+    def __init__(self):
+        self.page_num = randint(0, 19)
         self.booru_url = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1'
 
-    # Get a bunch of posts based on a limit that the user enters.
-    def get_posts(self):
-        final_url = self.booru_url + f'&limit={str(self.limit)}&tags={self.tags}&pid={self.page_num}'
+    # Get a bunch of posts based on a limit and tags that the user enters.
+    def get_posts(self, tags='', limit=100):
+        final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}'
         urlobj = urlreq.urlopen(final_url)
         json_response = json.load(urlobj)
         urlobj.close()
         temp = 4
         # Reduces search if json_response is an empty list
         while len(json_response) == 0: 
-            self.page_num = random.randint(0, temp) 
+            self.page_num = randint(0, temp) 
             # Further reduction if random integer fails again
             if temp > 0:
                 temp += -1
             else:
                 pass
-            final_url = self.booru_url + f'&limit={str(self.limit)}&tags={self.tags}&pid={self.page_num}'
+            final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}'
             urlobj = urlreq.urlopen(final_url)
             json_response = json.load(urlobj)
             urlobj.close()
@@ -39,27 +37,38 @@ class gbooru:
         return images
 
     # Get a single image based on tags that the user enters.
-    def get_single_post(self):
-        post_url = self.booru_url + f'&limit={1}&tags={self.tags}&pid={self.page_num}'
+    def get_single_post(self, tags=''):
+        post_url = self.booru_url + f'&limit={1}&tags={tags}&pid={self.page_num}'
         urlobj = urlreq.urlopen(post_url)
         json_response = json.load(urlobj)
         urlobj.close()
         temp = 4
         # Reduces search if json_response is an empty list
         while len(json_response) == 0:
-            self.page_num = random.randint(0, temp)
+            self.page_num = randint(0, temp)
             # Further reduction if random integer fails again
             if temp > 0:
                 temp += -1
             else:
                 pass
-            post_url = self.booru_url + f'&limit={1}&tags={self.tags}&pid={self.page_num}'
+            post_url = self.booru_url + f'&limit={1}&tags={tags}&pid={self.page_num}'
             urlobj = urlreq.urlopen(post_url)
             json_response = json.load(urlobj)
             urlobj.close()
         
         image = self.__link_images(json_response)
         return image
+    
+    def get_random_post(self):
+        self.page_num = randint(0, 999)
+        post_url = self.booru_url + f'&limit={1}&pid={self.page_num}'
+        urlobj = urlreq.urlopen(post_url) 
+        json_response = json.load(urlobj)
+        urlobj.close()
+
+        image = self.__link_images(json_response)
+        return image
+        
 
     # Private function to create a post URL and a related image URL
     def __link_images(self, response):

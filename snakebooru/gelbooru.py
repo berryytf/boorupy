@@ -81,7 +81,7 @@ class Gelbooru:
     # Get comments from a post using post_id
     def get_comments(self, post_id):
         comment_list = []
-        final_url = self.comment_url + f'&post_id={post_id}'
+        final_url = self.comment_url + f'&post_id={post_id}&api_key={self.api_key}&user_id={self.user_id}'
         urlobj = urlreq.urlopen(final_url)
         data = ET.parse(urlobj)
         urlobj.close()

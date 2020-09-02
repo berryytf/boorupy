@@ -1,4 +1,4 @@
-# BooruSnake
+# SnakeBooru
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 Module to access booru sites APIs.
@@ -15,7 +15,7 @@ Currently, you can use the module to search images on Gelbooru.
 
 This can be done as such
 ```python
-from boorusnake.gelbooru import Gelbooru
+from snakebooru.gelbooru import Gelbooru
 # User ID and API key are optional. Access may be limited without them
 # You can find both of these at https://gelbooru.com/index.php?page=account&s=home in Options
 # Registration is required to obtain them. 
@@ -44,7 +44,7 @@ Works similarly to get_random_post if you do not pass any arguments.
 
 ```python
 
-from boorusnake.gelbooru import Gelbooru
+from snakebooru.gelbooru import Gelbooru
 # User ID and API key are optional. Access may be limited without them
 # You can find both of these at https://gelbooru.com/index.php?page=account&s=home in Options
 # Registration is required to obtain them. 
@@ -62,7 +62,7 @@ Search a random post. No arguments.
 
 ```python
 
-from boorusnake.gelbooru import Gelbooru
+from snakebooru.gelbooru import Gelbooru
 # User ID and API key are optional. Access may be limited without them
 # You can find both of these at https://gelbooru.com/index.php?page=account&s=home in Options
 # Registration is required to obtain them. 

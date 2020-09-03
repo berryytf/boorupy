@@ -5,6 +5,8 @@ Module to access booru sites APIs.
 
 Working on Gelbooru support at the moment.
 
+Python 3.6+
+
 ```
 python -m pip install snakebooru
 ```

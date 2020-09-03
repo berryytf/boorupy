@@ -69,13 +69,14 @@ class Gelbooru:
         return image
     
     def get_random_post(self):
-        self.page_num = randint(0, 999)
-        post_url = self.booru_url + f'&limit={1}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+        self.page_num = randint(0, 200)
+        post_url = self.booru_url + f'&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
         urlobj = urlreq.urlopen(post_url) 
         json_response = json.load(urlobj)
         urlobj.close()
-
-        image = self.__link_images(json_response)
+        
+        temp = [json_response[randint(0,99)]]
+        image = self.__link_images(temp)
         return image
         
     # Get comments from a post using post_id

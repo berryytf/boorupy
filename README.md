@@ -10,4 +10,4 @@ python -m pip install snakebooru
 ```
 # Usage
 
-[List of uses here](https://github.com/berryytf/snakebooru/wiki/Usage)
+[List of uses here](https://github.com/berryytf/snakebooru/wiki/Gelbooru-Usage)

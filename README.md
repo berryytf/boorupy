@@ -7,6 +7,8 @@ Working on Gelbooru support at the moment.
 
 Python 3.6+
 
+### Installation
+
 ```
 python -m pip install snakebooru
 ```

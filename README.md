@@ -3,7 +3,7 @@
 
 Module to access booru sites APIs.
 
-Working on Gelbooru support at the moment.
+Working on Safebooru support at the moment.
 
 Python 3.6+
 

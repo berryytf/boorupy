@@ -116,7 +116,15 @@ class Gelbooru:
         if len(comment_list) == 0:
             return "No comments found"
         else:
-            return comment_list #return list of dictionaries
+            return comment_list # Returns list of dictionaries
+    
+    # Returns dictionary that contains data for a post
+    def get_post_data(self, post_id):
+        post_url = self.booru_url + f'&id={post_id}'
+        urlobj = urlreq.urlopen(post_url) 
+        json_response = json.load(urlobj)
+        urlobj.close()
+        return json_response[0]
 
     # Private function to create a post URL and a related image URL
     def __link_images(self, response):
@@ -125,8 +133,9 @@ class Gelbooru:
         temp = 1
         post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
         for i in range(len(response)):
-            temp_dict[f'Post {temp} URL'] = post_url + f'{response[i]["id"]}'
-            temp_dict[f'Image {temp} URL'] = response[i]['file_url']
+            temp_dict[f'post {temp} url'] = post_url + f'{response[i]["id"]}'
+            temp_dict[f'image {temp} url'] = response[i]['file_url']
+            temp_dict[f'id'] = response[i]['id']
             image_list.append(temp_dict)
             temp_dict = dict()
             temp += 1

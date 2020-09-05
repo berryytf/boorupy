@@ -28,7 +28,7 @@ class Safebooru:
             json_response = json.load(urlobj)
             urlobj.close()
         except:
-            raise Exception("Something went wrong :( Try checking your tags.")
+            return None
 
         temp = 4
         while len(json_response) == 0:
@@ -44,7 +44,7 @@ class Safebooru:
                 json_response = json.load(urlobj)
                 urlobj.close()
             except:
-                raise Exception("Something went wrong :( Try checking your tags.")
+                return None
             temp = 4
         
         images = self.__link_images(json_response)
@@ -60,7 +60,7 @@ class Safebooru:
             json_response = json.load(urlobj)
             urlobj.close()
         except:
-            raise Exception("Something went wrong :( Try checking your tags.")
+            return None
 
         temp = 4
 
@@ -78,7 +78,7 @@ class Safebooru:
                 json_response = json.load(urlobj)
                 urlobj.close()
             except:
-                raise Exception("Something went wrong :( Try checking your tags.")
+                return None
             temp = 4
 
         image = self.__link_images(json_response)

@@ -29,7 +29,7 @@ class Gelbooru:
             json_response = json.load(urlobj)
             urlobj.close()
         except:
-            raise Exception('Something went wrong :( Try checking your tags.')
+            return None
 
         temp = 4
         # Reduces search if json_response is an empty list
@@ -46,7 +46,7 @@ class Gelbooru:
                 json_response = json.load(urlobj)
                 urlobj.close()
             except:
-                raise Exception('Something went wrong :( Try checking your tags.')
+                return None
 
         images = self.__link_images(json_response)
         return images
@@ -60,7 +60,7 @@ class Gelbooru:
             json_response = json.load(urlobj)
             urlobj.close()
         except:
-            raise Exception('Something went wrong :( Try checking your tags.')
+            return None
 
         temp = 4
         # Reduces search if json_response is an empty list
@@ -77,7 +77,7 @@ class Gelbooru:
                 json_response = json.load(urlobj)
                 urlobj.close()
             except:
-                raise Exception('Something went wrong :( Try checking your tags.')
+                return None
         
         image = self.__link_images(json_response)
         return image
@@ -90,7 +90,7 @@ class Gelbooru:
             json_response = json.load(urlobj)
             urlobj.close()
         except:
-            raise Exception('Unexpected error.')
+            return None
         
         temp = [json_response[randint(0,99)]]
         image = self.__link_images(temp)

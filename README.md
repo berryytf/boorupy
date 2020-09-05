@@ -15,4 +15,5 @@ python -m pip install snakebooru
 # Usage
 
 [List of gelbooru uses here](https://github.com/berryytf/snakebooru/wiki/Gelbooru-Usage)
+
 [List of safebooru uses here](https://github.com/berryytf/snakebooru/wiki/Safebooru-Usage)

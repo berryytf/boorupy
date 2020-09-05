@@ -10,22 +10,27 @@ class Safebooru:
         self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index&json=1'
         self.comment_url = 'https://safebooru.org/index.php?page=dapi&s=comment&q=index'
 
-    # Fix tags so that they work with the image board
+    # Private function to fix tags so that they work with the image board
     def __tagifier(self, unformated_tags):
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
         return fixed_tags
 
+    # Returns up too 100 posts and images based on tags the user inputs
     def get_posts(self, tags='', limit=100):
         if limit > 100:
             raise Exception("Limit cannot be greater than 100")
 
         tags = self.__tagifier(tags)
-        final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
-        urlobj = urlreq.urlopen(final_url)
-        json_response = json.load(urlobj)
-        urlobj.close()
-        temp = 4
 
+        try:
+            final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+            urlobj = urlreq.urlopen(final_url)
+            json_response = json.load(urlobj)
+            urlobj.close()
+        except:
+            raise Exception("Something went wrong :( Try checking your tags.")
+
+        temp = 4
         while len(json_response) == 0:
             self.page_num = randint(0, temp)
 
@@ -33,20 +38,69 @@ class Safebooru:
                 temp += -1
             else:
                 pass
-            final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+            try:
+                final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+                urlobj = urlreq.urlopen(final_url)
+                json_response = json.load(urlobj)
+                urlobj.close()
+            except:
+                raise Exception("Something went wrong :( Try checking your tags.")
+            temp = 4
+        
+        images = self.__link_images(json_response)
+        return images
+
+    # Return a single post and image based on tags the user inputs
+    def get_single_post(self, tags=''):
+        tags = self.__tagifier(tags)
+        final_url = self.booru_url + f'&tags={tags}&limit=1&pid={self.page_num}'
+        
+        try:
             urlobj = urlreq.urlopen(final_url)
             json_response = json.load(urlobj)
             urlobj.close()
+        except:
+            raise Exception("Something went wrong :( Try checking your tags.")
+
+        temp = 4
+
+        # Reduce search if json_response is empty
+        while len(json_response) == 0:
+            self.page_num = randint(0, temp)
+            
+            if temp > 0:
+                temp += -1 # Further reduction
+            else:
+                pass
+            final_url = self.booru_url + f'&tags={tags}&limit={1}&pid={self.page_num}'
+            try:
+                urlobj = urlreq.urlopen(final_url)
+                json_response = json.load(urlobj)
+                urlobj.close()
+            except:
+                raise Exception("Something went wrong :( Try checking your tags.")
             temp = 4
-        
-        self.__link_images(json_response)
-        
-    
+
+        image = self.__link_images(json_response)
+        return image
+
+    #Get a random post. This selects a single image out of 20,100 images.
+    def get_random_post(self):
+        self.page_num = randint(0, 200)
+        final_url = self.booru_url + f'&limit={100}&pid={self.page_num}'
+        urlobj = urlreq.urlopen(final_url)
+        json_response = json.load(urlobj)
+        urlobj.close()
+
+        temp = [json_response[randint(0,99)]]
+        image = self.__link_images(temp)
+        return image
+
+    # Private function to link images from the various functions above.
     def __link_images(self, response):
         image_list = []
         temp_dict = dict()
         temp = 1
-
         post_url = 'https://safebooru.org/index.php?page=post&s=view'
 
         for i in response:
@@ -59,9 +113,5 @@ class Safebooru:
             image_list.append(temp_dict)
             temp += 1
             temp_dict = dict()
-        print(image_list)
 
-
-
-        
-
+        return image_list

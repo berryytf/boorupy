@@ -24,9 +24,13 @@ class Gelbooru:
     def get_posts(self, tags='', limit=100):
         tags = self.__tagifier(tags)
         final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-        urlobj = urlreq.urlopen(final_url)
-        json_response = json.load(urlobj)
-        urlobj.close()
+        try:
+            urlobj = urlreq.urlopen(final_url)
+            json_response = json.load(urlobj)
+            urlobj.close()
+        except:
+            raise Exception('Something went wrong :( Try checking your tags.')
+
         temp = 4
         # Reduces search if json_response is an empty list
         while len(json_response) == 0: 
@@ -37,9 +41,12 @@ class Gelbooru:
             else:
                 pass
             final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-            urlobj = urlreq.urlopen(final_url)
-            json_response = json.load(urlobj)
-            urlobj.close()
+            try:
+                urlobj = urlreq.urlopen(final_url)
+                json_response = json.load(urlobj)
+                urlobj.close()
+            except:
+                raise Exception('Something went wrong :( Try checking your tags.')
 
         images = self.__link_images(json_response)
         return images
@@ -47,10 +54,14 @@ class Gelbooru:
     # Get a single image based on tags that the user enters.
     def get_single_post(self, tags=''):
         tags = self.__tagifier(tags)
-        post_url = self.booru_url + f'&limit={1}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-        urlobj = urlreq.urlopen(post_url)
-        json_response = json.load(urlobj)
-        urlobj.close()
+        post_url = self.booru_url + f'&limit=1&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+        try:
+            urlobj = urlreq.urlopen(post_url)
+            json_response = json.load(urlobj)
+            urlobj.close()
+        except:
+            raise Exception('Something went wrong :( Try checking your tags.')
+
         temp = 4
         # Reduces search if json_response is an empty list
         while len(json_response) == 0:
@@ -60,10 +71,13 @@ class Gelbooru:
                 temp += -1
             else:
                 pass
-            post_url = self.booru_url + f'&limit={1}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-            urlobj = urlreq.urlopen(post_url)
-            json_response = json.load(urlobj)
-            urlobj.close()
+            post_url = self.booru_url + f'&limit=1&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+            try:
+                urlobj = urlreq.urlopen(post_url)
+                json_response = json.load(urlobj)
+                urlobj.close()
+            except:
+                raise Exception('Something went wrong :( Try checking your tags.')
         
         image = self.__link_images(json_response)
         return image
@@ -71,9 +85,12 @@ class Gelbooru:
     def get_random_post(self):
         self.page_num = randint(0, 200)
         post_url = self.booru_url + f'&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-        urlobj = urlreq.urlopen(post_url) 
-        json_response = json.load(urlobj)
-        urlobj.close()
+        try:
+            urlobj = urlreq.urlopen(post_url) 
+            json_response = json.load(urlobj)
+            urlobj.close()
+        except:
+            raise Exception('Unexpected error.')
         
         temp = [json_response[randint(0,99)]]
         image = self.__link_images(temp)
@@ -115,4 +132,3 @@ class Gelbooru:
             temp += 1
         
         return image_list # Returns image URL(s) and post URL(s) in a list
-    

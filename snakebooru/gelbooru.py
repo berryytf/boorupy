@@ -118,13 +118,16 @@ class Gelbooru:
         else:
             return comment_list # Returns list of dictionaries
     
-    # Returns dictionary that contains data for a post
+    # Get data for a post
     def get_post_data(self, post_id):
-        post_url = self.booru_url + f'&id={post_id}'
-        urlobj = urlreq.urlopen(post_url) 
-        json_response = json.load(urlobj)
+        data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
+
+        urlobj = urlreq.urlopen(data_url)
+        data = ET.parse(urlobj)
         urlobj.close()
-        return json_response[0]
+        root = data.getroot()
+
+        return root[0].attrib # Returns a dictionary
 
     # Private function to create a post URL and a related image URL
     def __link_images(self, response):

@@ -96,6 +96,17 @@ class Safebooru:
         image = self.__link_images(temp)
         return image
 
+    # Get data from a post
+    def get_post_data(self, post_id):
+        data_url = f'https://safebooru.org/index.php?page=dapi&s=post&q=index&id={post_id}'
+
+        urlobj = urlreq.urlopen(data_url)
+        data = ET.parse(urlobj)
+        urlobj.close()
+        root = data.getroot()
+
+        return root[0].attrib # Returns a dictionary
+
     # Private function to link images from the various functions above.
     def __link_images(self, response):
         image_list = []

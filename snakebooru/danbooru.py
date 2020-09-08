@@ -31,6 +31,18 @@ class Danbooru:
         
         return images
 
+    # Danbooru API has a "random" keyword :D
+    def get_random_post(self):
+        final_url = self.booru_url + f'&login={self.login}&api_key={self.api_key}&random=true&limit=1'
+        urlobj = urlreq.urlopen(final_url)
+        json_response = json.load(urlobj)
+        urlobj.close()
+
+        image = self.__link_images(json_response)
+
+        return image
+        
+
     # Private function to create dictionaries of posts/images
     def __link_images(self, response):
         image_list = []

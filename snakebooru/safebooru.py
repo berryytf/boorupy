@@ -119,8 +119,8 @@ class Safebooru:
             post_id = i['id']
             image_ext = i['image']
             image_url = f'https://safebooru.org/images/{directory}/{image_ext}'
-            temp_dict[f'Post {temp} URL'] = post_url + f'&id={post_id}'
-            temp_dict[f'Image {temp} URL'] = image_url
+            temp_dict[f'post {temp} url'] = post_url + f'&id={post_id}'
+            temp_dict[f'image {temp} url'] = image_url
             image_list.append(temp_dict)
             temp += 1
             temp_dict = dict()

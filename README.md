@@ -17,3 +17,5 @@ python -m pip install snakebooru
 [List of gelbooru uses here](https://github.com/berryytf/snakebooru/wiki/Gelbooru-Usage)
 
 [List of safebooru uses here](https://github.com/berryytf/snakebooru/wiki/Safebooru-Usage)
+
+### danbooru requires an API key and login for authentication 

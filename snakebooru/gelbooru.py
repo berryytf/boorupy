@@ -9,6 +9,7 @@ Works with gelbooru API.
 """
 
 class Gelbooru:
+
     def __init__(self, api_key: Optional[str] = None, user_id: Optional[str] = None):
         self.api_key = api_key
         self.user_id = user_id
@@ -28,7 +29,7 @@ class Gelbooru:
             urlobj = urlreq.urlopen(final_url)
             json_response = json.load(urlobj)
             urlobj.close()
-        except:
+        except json.decoder.JSONDecodeError:
             return None
 
         temp = 4
@@ -45,7 +46,7 @@ class Gelbooru:
                 urlobj = urlreq.urlopen(final_url)
                 json_response = json.load(urlobj)
                 urlobj.close()
-            except:
+            except json.decoder.JSONDecodeError:
                 return None
 
         images = self.__link_images(json_response)
@@ -59,7 +60,7 @@ class Gelbooru:
             urlobj = urlreq.urlopen(post_url)
             json_response = json.load(urlobj)
             urlobj.close()
-        except:
+        except json.decoder.JSONDecodeError:
             return None
 
         temp = 4
@@ -76,7 +77,7 @@ class Gelbooru:
                 urlobj = urlreq.urlopen(post_url)
                 json_response = json.load(urlobj)
                 urlobj.close()
-            except:
+            except json.decoder.JSONDecodeError:
                 return None
         
         image = self.__link_images(json_response)
@@ -89,20 +90,24 @@ class Gelbooru:
             urlobj = urlreq.urlopen(post_url) 
             json_response = json.load(urlobj)
             urlobj.close()
-        except:
+        except json.decoder.JSONDecodeError:
             return None
         
         temp = [json_response[randint(0,99)]]
         image = self.__link_images(temp)
-        return image
+        return image[0]
         
     # Get comments from a post using post_id
     def get_comments(self, post_id):
         comment_list = []
         final_url = self.comment_url + f'&post_id={post_id}&api_key={self.api_key}&user_id={self.user_id}'
-        urlobj = urlreq.urlopen(final_url)
-        data = ET.parse(urlobj)
-        urlobj.close()
+        try:
+            urlobj = urlreq.urlopen(final_url)
+            data = ET.parse(urlobj)
+            urlobj.close()
+        except json.decoder.JSONDecodeError:
+            return None
+
         root = data.getroot()
         temp = dict()
         
@@ -121,10 +126,13 @@ class Gelbooru:
     # Get data for a post
     def get_post_data(self, post_id):
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
+        try:
+            urlobj = urlreq.urlopen(data_url)
+            data = ET.parse(urlobj)
+            urlobj.close()
+        except json.decoder.JSONDecodeError:
+            return None
 
-        urlobj = urlreq.urlopen(data_url)
-        data = ET.parse(urlobj)
-        urlobj.close()
         root = data.getroot()
 
         return root[0].attrib # Returns a dictionary
@@ -133,14 +141,13 @@ class Gelbooru:
     def __link_images(self, response):
         image_list = []
         temp_dict = dict()
-        temp = 1
+
         post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
         for i in range(len(response)):
-            temp_dict[f'post {temp} url'] = post_url + f'{response[i]["id"]}'
-            temp_dict[f'image {temp} url'] = response[i]['file_url']
-            temp_dict[f'id'] = response[i]['id']
+            temp_dict['post url'] = post_url + f'{response[i]["id"]}'
+            temp_dict['image url'] = response[i]['file_url']
+            temp_dict['id'] = response[i]['id']
             image_list.append(temp_dict)
             temp_dict = dict()
-            temp += 1
-        
+
         return image_list # Returns image URL(s) and post URL(s) in a list

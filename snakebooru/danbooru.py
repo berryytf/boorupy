@@ -11,6 +11,7 @@ class Danbooru:
         self.login = login
         self.page_num = randint(0, 19)
         self.booru_url = 'https://danbooru.donmai.us/posts.json?'
+        self.post_url = 'https://danbooru.donmai.us/posts/'
 
     def __tagifier(self, unformated_tags):
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
@@ -24,7 +25,7 @@ class Danbooru:
         json_response = json.load(urlobj)
         urlobj.close()
 
-        if not json_response: # Non-existent tags return an empty list instead of raising an error
+        if not json_response:
             return None # Return None if no images found
 
         images = self.__link_images(json_response)
@@ -34,14 +35,26 @@ class Danbooru:
     # Danbooru API has a "random" keyword :D
     def get_random_post(self):
         final_url = self.booru_url + f'&login={self.login}&api_key={self.api_key}&random=true&limit=1'
+        
         urlobj = urlreq.urlopen(final_url)
         json_response = json.load(urlobj)
         urlobj.close()
-
+        
         image = self.__link_images(json_response)
 
         return image
+
+    def get_image_data(self, post_id):
+        final_url = self.post_url + f'{post_id}.json'
+
+        try: 
+            urlobj = urlreq.urlopen(final_url)
+            json_response = json.load(urlobj)
+            urlobj.close()
+        except:
+            return None
         
+        return json_response
 
     # Private function to create dictionaries of posts/images
     def __link_images(self, response):

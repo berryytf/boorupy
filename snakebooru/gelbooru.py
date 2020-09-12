@@ -15,7 +15,7 @@ class Gelbooru:
     def __init__(self, api_key: Optional[str] = None, user_id: Optional[str] = None):
         self.api_key = api_key
         self.user_id = user_id
-        self.page_num = randint(0, 19)
+        self.page_num = randint(0, 200)
         self.booru_url = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index'
         self.comment_url = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
 
@@ -37,18 +37,17 @@ class Gelbooru:
         except ET.ParseError:
             return None
 
-        for post in root:
-            posts.append(post.attrib)
-        
+        #Reduces search if no results are found. 
         temp = 4
         attempts = 5
-        while len(posts) == 0:
-            self.page_num = randint(0, temp)
-            if temp > 0:
-                temp -= 1
+        while len(root) == 0:
+            if attempts == 0:
+                return None
             else:
                 pass
-            final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}' 
+            self.page_num = randint(0, temp)
+            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+
             try:
                 urlobj = urlreq.urlopen(final_url)
                 data = ET.parse(urlobj)
@@ -56,15 +55,12 @@ class Gelbooru:
                 root = data.getroot()
             except ET.ParseError:
                 return None
+            
+            temp += -1
+            attempts += -1
 
-            attempts -= 1
-            if attempts == 0:
-                return None
-            else:
-                continue
-            for post in root:
-                posts.append(post.attrib)
-        
+        for post in root:
+            posts.append(post.attrib)
         images = self.__link_images(posts)
         return images
 
@@ -72,7 +68,7 @@ class Gelbooru:
     def get_single_post(self, tags=''):
         tags = self.__tagifier(tags)
         posts = []
-        final_url = self.booru_url + f'&limit=1&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+        final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
@@ -81,19 +77,16 @@ class Gelbooru:
         except ET.ParseError:
             return None
         
-        for post in root:
-            posts.append(post.attrib)
-        
-        # reduces search if no results found
         temp = 4
         attempts = 5
-        while len(posts) == 0:
-            self.page_num = randint(0, temp)
-            if temp > 0:
-                temp -= 1
+        while len(root) == 0:
+            if attempts == 0:
+                return None
             else:
                 pass
-            final_url = self.booru_url + f'&limit=1&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}' 
+            self.page_num = randint(0, temp)
+            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+
             try:
                 urlobj = urlreq.urlopen(final_url)
                 data = ET.parse(urlobj)
@@ -101,15 +94,13 @@ class Gelbooru:
                 root = data.getroot()
             except ET.ParseError:
                 return None
-
-            attempts -= 1
-            if attempts == 0:
-                return None
-            else:
-                continue
+            
+            temp += -1
+            attempts += -1
         
+        posts.append(root[randint(0, len(root)-1)].attrib)
         image = self.__link_images(posts)
-        return image
+        return image[0]
     
     # Random post picks a random image out of 20000+ images
     def get_random_post(self):
@@ -127,7 +118,7 @@ class Gelbooru:
         
         posts.append(root[randint(0,99)].attrib)
         image = self.__link_images(posts)
-        return image
+        return image[0]
         
     # Get comments from a post using post_id
     def get_comments(self, post_id):

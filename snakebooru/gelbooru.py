@@ -5,9 +5,10 @@ from typing import *
 import xml.etree.ElementTree as ET
 
 """
-Works with gelbooru API.
-ET.ParseError should never happen; tags that dont exist will just return an empty XML and be converted to an empty list.
-Using too many tags will result in just a few available images which may end up not working.
+Works with the gelbooru API.
+You don't need a API key or User ID but searching may be limited without them so it is recommended
+You can find your API key and User ID at https://gelbooru.com/index.php?page=account&s=options. Account is required
+Since this uses f-strings this module only works in Python 3.6+
 """
 
 class Gelbooru:
@@ -18,6 +19,21 @@ class Gelbooru:
         self.page_num = randint(0, 200)
         self.booru_url = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index'
         self.comment_url = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
+    
+    # Private function to create a post URL and a related image URL
+    def __link_images(self, response):
+        image_list = []
+        temp_dict = dict()
+
+        post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
+        for i in range(len(response)):
+            temp_dict['post url'] = post_url + f'{response[i]["id"]}'
+            temp_dict['image url'] = response[i]['file_url']
+            temp_dict['id'] = response[i]['id']
+            image_list.append(temp_dict)
+            temp_dict = dict()
+
+        return image_list
 
     def __tagifier(self, unformated_tags):
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
@@ -27,8 +43,9 @@ class Gelbooru:
     def get_posts(self, tags='', limit=100):
         posts = []
         tags = self.__tagifier(tags)
-        final_url = self.booru_url + f'&limit={str(limit)}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+        final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
         
+        # This error should not ever happen.
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
@@ -37,7 +54,7 @@ class Gelbooru:
         except ET.ParseError:
             return None
 
-        #Reduces search if no results are found. 
+        # Reduce search if length of root is 0. Gives up if pid=0 has 0 results 
         temp = 4
         attempts = 5
         while len(root) == 0:
@@ -46,7 +63,7 @@ class Gelbooru:
             else:
                 pass
             self.page_num = randint(0, temp)
-            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+            final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
 
             try:
                 urlobj = urlreq.urlopen(final_url)
@@ -69,6 +86,8 @@ class Gelbooru:
         tags = self.__tagifier(tags)
         posts = []
         final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+
+        # This error should not ever happen
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
@@ -77,6 +96,7 @@ class Gelbooru:
         except ET.ParseError:
             return None
         
+        # Reduce search if length of root is 0. Gives up if pid=0 has 0 results
         temp = 4
         attempts = 5
         while len(root) == 0:
@@ -159,18 +179,3 @@ class Gelbooru:
         root = data.getroot()
 
         return root[0].attrib
-
-    # Private function to create a post URL and a related image URL
-    def __link_images(self, response):
-        image_list = []
-        temp_dict = dict()
-
-        post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
-        for i in range(len(response)):
-            temp_dict['post url'] = post_url + f'{response[i]["id"]}'
-            temp_dict['image url'] = response[i]['file_url']
-            temp_dict['id'] = response[i]['id']
-            image_list.append(temp_dict)
-            temp_dict = dict()
-
-        return image_list # Returns image URL(s) and post URL(s) in a list

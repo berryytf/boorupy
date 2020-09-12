@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 
 """
 Works with gelbooru API.
+ET.ParseError should never happen; tags that dont exist will just return an empty XML and be converted to an empty list.
+Using too many tags will result in just a few available images which may end up not working.
 """
 
 class Gelbooru:
@@ -109,6 +111,7 @@ class Gelbooru:
         image = self.__link_images(posts)
         return image
     
+    # Random post picks a random image out of 20000+ images
     def get_random_post(self):
         self.page_num = randint(0, 200)
         posts = []

@@ -12,6 +12,7 @@ class Safebooru:
 
     # Private function to link images from the various functions above.
     def __link_images(self, response):
+
         image_list = []
         temp_dict = dict()
         post_url = 'https://safebooru.org/index.php?page=post&s=view&id='
@@ -28,6 +29,7 @@ class Safebooru:
 
     # Private function to fix tags so that they work with the image board
     def __tagifier(self, unformated_tags):
+
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
         return fixed_tags
 
@@ -79,6 +81,7 @@ class Safebooru:
 
     # Return a single post and image based on tags the user inputs
     def get_single_post(self, tags=''):
+
         tags = self.__tagifier(tags)
         posts = []
         final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}'
@@ -116,20 +119,35 @@ class Safebooru:
         image = self.__link_images(posts)
         return image
 
-    #Get a random post. This selects a single image out of 20,100 images.
+    # Selects from 3000000+ images!
     def get_random_post(self):
-        self.page_num = randint(0, 200)
-        final_url = self.booru_url + f'&limit={100}&pid={self.page_num}'
-        urlobj = urlreq.urlopen(final_url)
-        json_response = json.load(urlobj)
-        urlobj.close()
+        
+        posts = []
+        try:
+            urlobj = urlreq.urlopen(self.booru_url)
+            data = ET.parse(urlobj)
+            urlobj.close()
+            root_temp = data.getroot()
+        except ET.ParseError:
+            return None
 
-        temp = [json_response[randint(0,99)]]
-        image = self.__link_images(temp)
-        return image
+        post_id = randint(1, int(root_temp.attrib['count']))
+        final_url = self.booru_url + f'&id={post_id}'
+        try:
+            urlobj = urlreq.urlopen(self.booru_url)
+            data = ET.parse(urlobj)
+            urlobj.close()
+            root = data.getroot()
+        except ET.ParseError:
+            return None
+
+        posts.append(root[0].attrib)
+        image = self.__link_images(posts)
+        return image[0]
 
     # Get data from a post
     def get_post_data(self, post_id):
+
         data_url = f'https://safebooru.org/index.php?page=dapi&s=post&q=index&id={post_id}'
 
         urlobj = urlreq.urlopen(data_url)

@@ -44,7 +44,7 @@ class Gelbooru:
     # Get a bunch of posts based on a limit and tags that the user enters.
     def get_posts(self, tags='', limit=100):
         '''User can pass in tags separated by a comma.
-        Using a dash before a tag will exlude it 
+        Using a dash before a tag will exclude it 
         e.g. (cat ears, blue eyes, rating:safe, -nude).
         The limit parameter has a default value of 100.
         Regardless of limit, this should return a list.'''
@@ -195,7 +195,7 @@ class Gelbooru:
     def get_post_data(self, post_id):
         '''Pass in a post ID to get ALL of the post's data.
         This includes the direct image url.'''
-        
+
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
         try:
             urlobj = urlreq.urlopen(data_url)

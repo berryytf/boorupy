@@ -5,7 +5,9 @@ from typing import *
 import xml.etree.ElementTree as ET
 
 class Safebooru:
+    
     def __init__(self):
+
         self.page_num = randint(0, 19)
         self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index'
         self.comment_url = 'https://safebooru.org/index.php?page=dapi&s=comment&q=index'

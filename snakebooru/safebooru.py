@@ -35,6 +35,11 @@ class Safebooru:
 
     # Returns up too 100 posts and images based on tags the user inputs
     def get_posts(self, tags='', limit=100):
+        '''User can pass in tags separated by a comma
+        Using a dash before a tag will exclude it 
+        e.g. (cat ears, -blue eyes)
+        The limit parameter has a default value of 100
+        Regardless of limit, this should return a list'''
 
         posts = []
         if limit > 100:
@@ -81,6 +86,10 @@ class Safebooru:
 
     # Return a single post and image based on tags the user inputs
     def get_single_post(self, tags=''):
+        '''User can pass in tags separated by a comma
+        Using a dash before a tag will exclude it 
+        e.g. (cat ears, -blue eyes)
+        Has a hard limit of 1'''
 
         tags = self.__tagifier(tags)
         posts = []
@@ -121,7 +130,8 @@ class Safebooru:
 
     # Selects from 3000000+ images!
     def get_random_post(self):
-        
+        '''Simply, returns a random image out of 3000000+ possible images'''
+
         posts = []
         try:
             urlobj = urlreq.urlopen(self.booru_url)
@@ -147,6 +157,7 @@ class Safebooru:
 
     # Get data from a post
     def get_post_data(self, post_id):
+        '''User can pass in a post ID to get all of its data'''
 
         data_url = f'https://safebooru.org/index.php?page=dapi&s=post&q=index&id={post_id}'
 

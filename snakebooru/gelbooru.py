@@ -3,13 +3,6 @@ from random import randint
 from typing import *
 import xml.etree.ElementTree as ET
 
-"""
-Works with the gelbooru API.
-You don't need a API key or User ID but searching may be limited without them so it is recommended
-You can find your API key and User ID at https://gelbooru.com/index.php?page=account&s=options. Account is required
-Since this uses f-strings this module only works in Python 3.6+
-"""
-
 class Gelbooru:
 
     def __init__(self, api_key: Optional[str] = None, user_id: Optional[str] = None):
@@ -43,11 +36,11 @@ class Gelbooru:
     
     # Get a bunch of posts based on a limit and tags that the user enters.
     def get_posts(self, tags='', limit=100):
-        '''User can pass in tags separated by a comma.
+        '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it 
-        e.g. (cat ears, blue eyes, rating:safe, -nude).
-        The limit parameter has a default value of 100.
-        Regardless of limit, this should return a list.'''
+        e.g. (cat ears, blue eyes, rating:safe, -nude)
+        The limit parameter has a default value of 100
+        Regardless of limit, this should return a list'''
 
         posts = []
         tags = self.__tagifier(tags)
@@ -92,9 +85,10 @@ class Gelbooru:
 
     # Get a single image based on tags that the user enters.
     def get_single_post(self, tags=''):
-        '''Pass in tags separated by a comma
+        '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it
-        e.g. (cat ears, blue eyes, rating:safe, -nude)'''
+        e.g. (cat ears, blue eyes, rating:safe, -nude)
+        Has a hard limit of 1'''
 
         tags = self.__tagifier(tags)
         posts = []
@@ -193,8 +187,7 @@ class Gelbooru:
     
     # Get data for a post
     def get_post_data(self, post_id):
-        '''Pass in a post ID to get ALL of the post's data.
-        This includes the direct image url.'''
+        '''User can pass in a post ID to get all of its data'''
 
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
         try:

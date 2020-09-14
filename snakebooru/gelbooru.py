@@ -43,14 +43,11 @@ class Gelbooru:
     
     # Get a bunch of posts based on a limit and tags that the user enters.
     def get_posts(self, tags='', limit=100):
-        '''
-        User can pass in tags separated by a comma.
+        '''User can pass in tags separated by a comma.
         Using a dash before a tag will exlude it 
         e.g. (cat ears, blue eyes, rating:safe, -nude).
-
         The limit parameter has a default value of 100.
-        Regardless of limit, this should return a list.
-        '''
+        Regardless of limit, this should return a list.'''
 
         posts = []
         tags = self.__tagifier(tags)
@@ -95,6 +92,9 @@ class Gelbooru:
 
     # Get a single image based on tags that the user enters.
     def get_single_post(self, tags=''):
+        '''Pass in tags separated by a comma
+        Using a dash before a tag will exclude it
+        e.g. (cat ears, blue eyes, rating:safe, -nude)'''
 
         tags = self.__tagifier(tags)
         posts = []
@@ -137,11 +137,8 @@ class Gelbooru:
     
     # Chooses an image out of 5000000+ images!
     def get_random_post(self):
-        '''
-        STILL MAY BE UNDER PROGRESS
+        '''Simply, returns a random image out of 5000000+ possible images.'''
 
-        Simply, returns a random image out of 5000000+ possible images.
-        '''
         posts = []
         try:
             urlobj = urlreq.urlopen(self.booru_url)
@@ -167,6 +164,8 @@ class Gelbooru:
         
     # Get comments from a post using post_id
     def get_comments(self, post_id):
+        '''Pass in a post ID to get the comments for the post.
+        If no comments are found, returns None.'''
 
         comment_list = []
         final_url = self.comment_url + f'&post_id={post_id}&api_key={self.api_key}&user_id={self.user_id}'
@@ -188,12 +187,14 @@ class Gelbooru:
             temp = dict()
 
         if len(comment_list) == 0:
-            return "No comments found"
+            return None
         else:
             return comment_list
     
     # Get data for a post
     def get_post_data(self, post_id):
+        '''Pass in a post ID to get ALL of the post's data.
+        This includes the direct image url.'''
         
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
         try:

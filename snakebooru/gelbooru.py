@@ -1,4 +1,3 @@
-import json
 import urllib.request as urlreq
 from random import randint
 from typing import *
@@ -14,6 +13,7 @@ Since this uses f-strings this module only works in Python 3.6+
 class Gelbooru:
 
     def __init__(self, api_key: Optional[str] = None, user_id: Optional[str] = None):
+
         self.api_key = api_key
         self.user_id = user_id
         self.page_num = randint(0, 200)
@@ -22,6 +22,7 @@ class Gelbooru:
     
     # Private function to create a post URL and a related image URL
     def __link_images(self, response):
+
         image_list = []
         temp_dict = dict()
 
@@ -36,11 +37,21 @@ class Gelbooru:
         return image_list
 
     def __tagifier(self, unformated_tags):
+
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
         return fixed_tags
     
     # Get a bunch of posts based on a limit and tags that the user enters.
     def get_posts(self, tags='', limit=100):
+        '''
+        User can pass in tags separated by a comma.
+        Using a dash before a tag will exlude it 
+        e.g. (cat ears, blue eyes, rating:safe, -nude).
+
+        The limit parameter has a default value of 100.
+        Regardless of limit, this should return a list.
+        '''
+
         posts = []
         tags = self.__tagifier(tags)
         final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
@@ -78,11 +89,13 @@ class Gelbooru:
 
         for post in root:
             posts.append(post.attrib)
+            
         images = self.__link_images(posts)
         return images
 
     # Get a single image based on tags that the user enters.
     def get_single_post(self, tags=''):
+
         tags = self.__tagifier(tags)
         posts = []
         final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
@@ -122,12 +135,24 @@ class Gelbooru:
         image = self.__link_images(posts)
         return image[0]
     
-    # Random post picks a random image out of 20000+ images
+    # Chooses an image out of 5000000+ images!
     def get_random_post(self):
-        self.page_num = randint(0, 200)
+        '''
+        STILL MAY BE UNDER PROGRESS
+
+        Simply, returns a random image out of 5000000+ possible images.
+        '''
         posts = []
-        final_url = self.booru_url + f'&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-        
+        try:
+            urlobj = urlreq.urlopen(self.booru_url)
+            data = ET.parse(urlobj)
+            urlobj.close()
+            root_temp = data.getroot()
+        except ET.ParseError:
+            return None
+
+        post_id = randint(1, int(root_temp.attrib['count']))
+        final_url = self.booru_url + f'&id={post_id}'
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
@@ -136,12 +161,13 @@ class Gelbooru:
         except ET.ParseError:
             return None
         
-        posts.append(root[randint(0,99)].attrib)
+        posts.append(root[0].attrib)
         image = self.__link_images(posts)
         return image[0]
         
     # Get comments from a post using post_id
     def get_comments(self, post_id):
+
         comment_list = []
         final_url = self.comment_url + f'&post_id={post_id}&api_key={self.api_key}&user_id={self.user_id}'
         try:
@@ -168,6 +194,7 @@ class Gelbooru:
     
     # Get data for a post
     def get_post_data(self, post_id):
+        
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
         try:
             urlobj = urlreq.urlopen(data_url)

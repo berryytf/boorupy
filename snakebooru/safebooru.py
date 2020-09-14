@@ -7,8 +7,24 @@ import xml.etree.ElementTree as ET
 class Safebooru:
     def __init__(self):
         self.page_num = randint(0, 19)
-        self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index&json=1'
+        self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index'
         self.comment_url = 'https://safebooru.org/index.php?page=dapi&s=comment&q=index'
+
+    # Private function to link images from the various functions above.
+    def __link_images(self, response):
+        image_list = []
+        temp_dict = dict()
+        post_url = 'https://safebooru.org/index.php?page=post&s=view&id='
+        for i in response:
+            post_id = i['id']
+            image_url = i['file_url']
+            temp_dict['post_url'] = post_url + f'{post_id}'
+            temp_dict['image_url'] = image_url
+            temp_dict['id'] = post_id
+            image_list.append(temp_dict)
+            temp_dict = dict()
+
+        return image_list
 
     # Private function to fix tags so that they work with the image board
     def __tagifier(self, unformated_tags):
@@ -17,71 +33,87 @@ class Safebooru:
 
     # Returns up too 100 posts and images based on tags the user inputs
     def get_posts(self, tags='', limit=100):
+
+        posts = []
         if limit > 100:
             raise Exception("Limit cannot be greater than 100")
 
         tags = self.__tagifier(tags)
-
+        final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+        
+        # This error should never happen
         try:
-            final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
             urlobj = urlreq.urlopen(final_url)
-            json_response = json.load(urlobj)
+            data = ET.parse(urlobj)
             urlobj.close()
-        except:
-            return None
-
+            root = data.getroot()
+        except ET.ParseError:
+            return None        
+        
         temp = 4
-        while len(json_response) == 0:
-            self.page_num = randint(0, temp)
-
-            if temp > 0:
-                temp += -1
+        attempts = 5
+        while len(root) == 0:
+            if attempts == 0:
+                return None
             else:
                 pass
+            self.page_num = randint(0, temp)
+            final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+            
             try:
-                final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
                 urlobj = urlreq.urlopen(final_url)
-                json_response = json.load(urlobj)
+                data = ET.parse(urlobj)
                 urlobj.close()
-            except:
+                root = data.getroot()
+            except ET.ParseError:
                 return None
-            temp = 4
-        
-        images = self.__link_images(json_response)
+            
+            temp += -1
+            attempts += -1
+
+        for post in root:
+            posts.append(post.attrib)
+
+        images = self.__link_images(posts)
         return images
 
     # Return a single post and image based on tags the user inputs
     def get_single_post(self, tags=''):
         tags = self.__tagifier(tags)
-        final_url = self.booru_url + f'&tags={tags}&limit=1&pid={self.page_num}'
+        posts = []
+        final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}'
         
         try:
             urlobj = urlreq.urlopen(final_url)
-            json_response = json.load(urlobj)
+            data = ET.parse(urlobj)
             urlobj.close()
-        except:
+            root = data.getroot()
+        except ET.ParseError:
             return None
 
         temp = 4
-
-        # Reduce search if json_response is empty
-        while len(json_response) == 0:
-            self.page_num = randint(0, temp)
-            
-            if temp > 0:
-                temp += -1 # Further reduction
+        attempts =5 
+        while len(root) == 0:
+            if attempts == 0:
+                return None
             else:
                 pass
-            final_url = self.booru_url + f'&tags={tags}&limit={1}&pid={self.page_num}'
+            self.page_num = randint(0, temp)
+            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}'
+            
             try:
                 urlobj = urlreq.urlopen(final_url)
-                json_response = json.load(urlobj)
+                data = ET.parse(urlobj)
                 urlobj.close()
-            except:
+                root = data.getroot()
+            except ET.ParseError:
                 return None
-            temp = 4
-
-        image = self.__link_images(json_response)
+            
+            temp += -1
+            attempts += -1
+            
+        posts.append(root[randint(0, len(root)-1)].attrib)
+        image = self.__link_images(posts)
         return image
 
     #Get a random post. This selects a single image out of 20,100 images.
@@ -106,23 +138,3 @@ class Safebooru:
         root = data.getroot()
 
         return root[0].attrib # Returns a dictionary
-
-    # Private function to link images from the various functions above.
-    def __link_images(self, response):
-        image_list = []
-        temp_dict = dict()
-        temp = 1
-        post_url = 'https://safebooru.org/index.php?page=post&s=view'
-
-        for i in response:
-            directory = i['directory']
-            post_id = i['id']
-            image_ext = i['image']
-            image_url = f'https://safebooru.org/images/{directory}/{image_ext}'
-            temp_dict[f'post {temp} url'] = post_url + f'&id={post_id}'
-            temp_dict[f'image {temp} url'] = image_url
-            image_list.append(temp_dict)
-            temp += 1
-            temp_dict = dict()
-
-        return image_list

@@ -248,9 +248,10 @@ class Gelbooru:
         If no comments are found, returns None.'''
 
         comment_list = []
-        final_url = self.comment_url + f'&post_id={post_id}&api_key={self.api_key}&user_id={self.user_id}'
+        endpoint = self.__endpoint('comment')
+        endpoint.args['post_id'] = post_id
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
         except:
             return None
@@ -276,9 +277,10 @@ class Gelbooru:
     async def get_post_data(self, post_id) -> Optional[DataContainer]:
         '''User can pass in a post ID to get all of its data'''
 
-        data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
+        endpoint = self.__endpoint('post')
+        endpoint.args['id'] = post_id
         try:
-            urlobj = urlreq.urlopen(data_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
         except:
             return None

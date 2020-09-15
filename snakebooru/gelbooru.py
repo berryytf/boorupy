@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 import asyncio
 from furl import furl
 
+'''Access Gelbooru's API'''
+
 class DataContainer:
     '''Image container for results
     Meant to be used with get_post_data'''
@@ -50,7 +52,7 @@ class DataContainer:
         
         return tuple(tags)
     
-    async def show_comments(self):
+    async def show_comments(self) -> list:
         if self.has_comments == 'false':
             return None
 
@@ -182,7 +184,6 @@ class Gelbooru:
             return None
         finally:
             urlobj.close()
-
         
         # Reduce search if length of root is 0. Gives up if pid=0 has 0 results
         temp = 4
@@ -204,7 +205,6 @@ class Gelbooru:
             finally:
                 urlobj.close()
 
-            
             temp += -1
             attempts += -1
         
@@ -215,10 +215,14 @@ class Gelbooru:
     # Chooses an image out of 5000000+ images!
     async def get_random_post(self) -> dict:
         '''Simply, returns a random image out of 5000000+ possible images.'''
-
+    
         posts = []
+        endpoint = self.__endpoint('post')
+        print(endpoint)
+        
+        # First request to obtain post count from the API
         try:
-            urlobj = urlreq.urlopen(self.booru_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
             root_temp = data.getroot()
         except ET.ParseError:
@@ -226,10 +230,11 @@ class Gelbooru:
         finally:
             urlobj.close()
 
+        # Second request to actually choose a random post
         post_id = randint(1, int(root_temp.attrib['count']))
-        final_url = self.booru_url + f'&id={post_id}'
+        endpoint.args['id'] = post_id
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
             root = data.getroot()
         except ET.ParseError:
@@ -237,7 +242,6 @@ class Gelbooru:
         finally:
             urlobj.close()
 
-        
         posts.append(root[0].attrib)
         image = self.__link_images(posts)
         return image[0]
@@ -263,12 +267,15 @@ class Gelbooru:
         
         # Iterate through comments
         for i in range(len(root)):
+            temp['id'] = root[i].attrib['id']
             temp['author'] = root[i].attrib['creator']
+            temp['date'] = root[i].attrib['created_at']
             temp['comment'] = root[i].attrib['body']
+
             comment_list.append(temp)
             temp = dict()
 
-        if len(comment_list) == 0:
+        if not comment_list:
             return None
         else:
             return comment_list

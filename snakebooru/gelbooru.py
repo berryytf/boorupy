@@ -4,19 +4,70 @@ from typing import *
 import xml.etree.ElementTree as ET
 import asyncio
 
+class DataContainer:
+    '''Image container for results
+    Meant to be used with get_post_data'''
 
-class ImageContainer:
-    pass
+    def __init__(self, payload: dict):
+        self.data           = payload
+        self.id             = int(payload.get('id'))
+        self.height         = int(payload.get('height'))
+        self.width          = int(payload.get('width'))
+        self.sample_height  = int(payload.get('sample_height'))
+        self.sample_width   = int(payload.get('sample_width'))
+        self.preview_width  = int(payload.get('preview_width'))
+        self.preview_height = int(payload.get('preview_height'))
+        self.score          = int(payload.get('score'))
+        self.change         = int(payload.get('change'))
+        self.file_url       = payload.get('file_url')
+        self.parent_id      = payload.get('parent_id')
+        self.sample_url     = payload.get('sample_url')
+        self.preview_url    = payload.get('preview_url')
+        self.rating         = payload.get('rating')
+        self.tags           = payload.get('tags')
+        self.md5            = payload.get('md5')
+        self.creator_id     = payload.get('creator_id')
+        self.has_children   = payload.get('has_children')
+        self.created_at     = payload.get('created_at')
+        self.status         = payload.get('status')
+        self.source         = payload.get('source')
+        self.has_notes      = payload.get('has_notes')
+        self.has_comments   = payload.get('has_comments')
+        
+    async def show_all_data(self) -> dict:
+        '''Get all data for post'''
+        return self.data
+    
+    async def show_tags(self) -> tuple:
+        tags = self.tags.strip().split(' ')
+        if self.rating == 's':
+            tags.append('rating:safe')
+        if self.rating == 'q':
+            tags.append('rating:questionable')
+        if self.rating == 'e':
+            tags.append('rating:explicit')
+        
+        return tuple(tags)
+    
+    async def show_comments(self):
+        if self.has_comments == 'false':
+            return None
 
+        comments = await Gelbooru().get_comments(self.id)
+        return comments
+        
 class Gelbooru:
 
-    def __init__(self, api_key: Optional[str] = None, user_id: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None,
+                    user_id: Optional[str] = None, 
+                    loop: Optional[asyncio.AbstractEventLoop] = None):
 
-        self.api_key = api_key
-        self.user_id = user_id
-        self.page_num = randint(0, 200)
-        self.booru_url = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index'
-        self.comment_url = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
+        self.api_key        = api_key
+        self.user_id        = user_id
+        self.page_num       = randint(0, 200)
+        self.booru_url      = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index'
+        self.comment_url    = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
+        self._loop = None
     
     # Private function to create a post URL and a related image URL
     async def __link_images(self, response):
@@ -40,7 +91,7 @@ class Gelbooru:
         return fixed_tags
     
     # Get a bunch of posts based on a limit and tags that the user enters.
-    async def get_posts(self, tags='', limit=100):
+    async def get_posts(self, tags='', limit=100) -> list:
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it 
         e.g. (cat ears, blue eyes, rating:safe, -nude)
@@ -84,12 +135,12 @@ class Gelbooru:
 
         for post in root:
             posts.append(post.attrib)
-            
+        
         images = await self.__link_images(posts)
         return images
 
     # Get a single image based on tags that the user enters.
-    async def get_single_post(self, tags=''):
+    async def get_single_post(self, tags='') -> dict:
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it
         e.g. (cat ears, blue eyes, rating:safe, -nude)
@@ -135,7 +186,7 @@ class Gelbooru:
         return image[0]
     
     # Chooses an image out of 5000000+ images!
-    async def get_random_post(self):
+    async def get_random_post(self) -> dict:
         '''Simply, returns a random image out of 5000000+ possible images.'''
 
         posts = []
@@ -191,7 +242,7 @@ class Gelbooru:
             return comment_list
     
     # Get data for a post
-    async def get_post_data(self, post_id):
+    async def get_post_data(self, post_id) -> Optional[DataContainer]:
         '''User can pass in a post ID to get all of its data'''
 
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'
@@ -203,5 +254,4 @@ class Gelbooru:
             return None
 
         root = data.getroot()
-
-        return root[0].attrib
+        return DataContainer(root[0].attrib)

@@ -3,13 +3,13 @@ from distutils .core import setup
 setup(
   name = 'snakebooru',         # How you named your package folder (MyLib)
   packages = ['snakebooru'],   # Chose the same as "name"
-  version = '0.2.4',      # Start with a small number and increase it with every change you make
+  version = '0.3.0',      # Start with a small number and increase it with every change you make
   license='gpl-3.0',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'Module to access various booru sites APIs.',   # Give a short description about your library
   author = 'berryytf',                   # Type in your name
   author_email = 'gabe@kjsl.org',      # Type in your E-Mail
   url = 'https://github.com/berryytf/snakebooru',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/berryytf/snakebooru/archive/v0.2.4-alpha.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/berryytf/snakebooru/archive/v0.3.0-alpha.tar.gz',    # I explain this later on
   keywords = ['Booru', 'Anime', 'Imageboard', 'NSFW'],   # Keywords that define your package best
   install_requires=[],
   classifiers=[

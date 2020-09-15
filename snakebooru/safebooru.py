@@ -1,4 +1,3 @@
-import json
 import urllib.request as urlreq
 from random import randint
 from typing import *
@@ -8,7 +7,7 @@ class Safebooru:
     
     def __init__(self):
 
-        self.page_num = randint(0, 19)
+        self.page_num = randint(0, 200)
         self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index'
         self.comment_url = 'https://safebooru.org/index.php?page=dapi&s=comment&q=index'
 
@@ -41,6 +40,7 @@ class Safebooru:
         Using a dash before a tag will exclude it 
         e.g. (cat ears, -blue eyes)
         The limit parameter has a default value of 100
+        Safebooru max limit is 100
         Regardless of limit, this should return a list'''
 
         posts = []
@@ -125,7 +125,7 @@ class Safebooru:
             
             temp += -1
             attempts += -1
-            
+        
         posts.append(root[randint(0, len(root)-1)].attrib)
         image = self.__link_images(posts)
         return image

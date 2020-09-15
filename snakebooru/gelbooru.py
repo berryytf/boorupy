@@ -3,6 +3,7 @@ from random import randint
 from typing import *
 import xml.etree.ElementTree as ET
 import asyncio
+from furl import furl
 
 class DataContainer:
     '''Image container for results
@@ -55,7 +56,7 @@ class DataContainer:
 
         comments = await Gelbooru().get_comments(self.id)
         return comments
-        
+    
 class Gelbooru:
 
     def __init__(self, api_key: Optional[str] = None,
@@ -65,12 +66,26 @@ class Gelbooru:
         self.api_key        = api_key
         self.user_id        = user_id
         self.page_num       = randint(0, 200)
-        self.booru_url      = 'https://gelbooru.com/index.php?page=dapi&s=post&q=index'
-        self.comment_url    = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
+        self.booru_url      = 'https://gelbooru.com/'
         self._loop = None
     
+    def __endpoint(self, s) -> furl:
+
+        endpoint = furl(self.booru_url)
+        endpoint.args['page'] = 'dapi'
+        endpoint.args['s'] = s
+        endpoint.args['q'] = 'index'
+
+        # Add api key and user ID if possible
+        if self.api_key:
+            endpoint.args['api_key'] = self.api_key
+        if self.user_id:
+            endpoint.args['user_id'] = self.user_id
+        
+        return endpoint
+    
     # Private function to create a post URL and a related image URL
-    async def __link_images(self, response):
+    def __link_images(self, response):
 
         image_list = []
         temp_dict = dict()
@@ -85,10 +100,10 @@ class Gelbooru:
 
         return image_list
 
-    async def __tagifier(self, unformated_tags):
+    def __tagifier(self, tags) -> list:
 
-        fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
-        return fixed_tags
+        tags = [tag.strip().lower().replace(' ', '_') for tag in tags.split(', ')] if tags else []
+        return tags
     
     # Get a bunch of posts based on a limit and tags that the user enters.
     async def get_posts(self, tags='', limit=100) -> list:
@@ -99,17 +114,21 @@ class Gelbooru:
         Regardless of limit, this should return a list'''
 
         posts = []
-        tags = await self.__tagifier(tags)
-        final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
-        
+        tags = self.__tagifier(tags)
+        endpoint = self.__endpoint('post')
+        endpoint.args['limit'] = limit
+        endpoint.args['pid'] = self.page_num
+        endpoint.args['tags'] = tags
+
         # This error should not ever happen.
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
             urlobj.close()
-            root = data.getroot()
         except ET.ParseError:
             return None
+        finally:
+            root = data.getroot()
 
         # Reduce search if length of root is 0. Gives up if pid=0 has 0 results 
         temp = 4
@@ -120,15 +139,16 @@ class Gelbooru:
             else:
                 pass
             self.page_num = randint(0, temp)
-            final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+            endpoint.args['pid'] = self.page_num
 
             try:
-                urlobj = urlreq.urlopen(final_url)
+                urlobj = urlreq.urlopen(str(endpoint))
                 data = ET.parse(urlobj)
-                urlobj.close()
                 root = data.getroot()
             except ET.ParseError:
                 return None
+            finally:
+                urlobj.close()
             
             temp += -1
             attempts += -1
@@ -136,7 +156,7 @@ class Gelbooru:
         for post in root:
             posts.append(post.attrib)
         
-        images = await self.__link_images(posts)
+        images = self.__link_images(posts)
         return images
 
     # Get a single image based on tags that the user enters.
@@ -146,18 +166,23 @@ class Gelbooru:
         e.g. (cat ears, blue eyes, rating:safe, -nude)
         Has a hard limit of 1'''
 
-        tags = await self.__tagifier(tags)
+        tags = self.__tagifier(tags)
         posts = []
-        final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+        endpoint = self.__endpoint('post')
+        endpoint.args['limit'] = 100
+        endpoint.args['pid'] = self.page_num
+        endpoint.args['tags'] = tags
 
         # This error should not ever happen
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
-            urlobj.close()
             root = data.getroot()
         except ET.ParseError:
             return None
+        finally:
+            urlobj.close()
+
         
         # Reduce search if length of root is 0. Gives up if pid=0 has 0 results
         temp = 4
@@ -168,21 +193,23 @@ class Gelbooru:
             else:
                 pass
             self.page_num = randint(0, temp)
-            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
+            endpoint.args['pid'] = self.page_num
 
             try:
-                urlobj = urlreq.urlopen(final_url)
+                urlobj = urlreq.urlopen(str(endpoint))
                 data = ET.parse(urlobj)
-                urlobj.close()
                 root = data.getroot()
             except ET.ParseError:
                 return None
+            finally:
+                urlobj.close()
+
             
             temp += -1
             attempts += -1
         
         posts.append(root[randint(0, len(root)-1)].attrib)
-        image = await self.__link_images(posts)
+        image = self.__link_images(posts)
         return image[0]
     
     # Chooses an image out of 5000000+ images!
@@ -193,23 +220,26 @@ class Gelbooru:
         try:
             urlobj = urlreq.urlopen(self.booru_url)
             data = ET.parse(urlobj)
-            urlobj.close()
             root_temp = data.getroot()
         except ET.ParseError:
             return None
+        finally:
+            urlobj.close()
 
         post_id = randint(1, int(root_temp.attrib['count']))
         final_url = self.booru_url + f'&id={post_id}'
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
-            urlobj.close()
             root = data.getroot()
         except ET.ParseError:
             return None
+        finally:
+            urlobj.close()
+
         
         posts.append(root[0].attrib)
-        image = await self.__link_images(posts)
+        image = self.__link_images(posts)
         return image[0]
         
     # Get comments from a post using post_id
@@ -222,9 +252,10 @@ class Gelbooru:
         try:
             urlobj = urlreq.urlopen(final_url)
             data = ET.parse(urlobj)
-            urlobj.close()
         except:
             return None
+        finally:
+            urlobj.close()
 
         root = data.getroot()
         temp = dict()
@@ -249,9 +280,10 @@ class Gelbooru:
         try:
             urlobj = urlreq.urlopen(data_url)
             data = ET.parse(urlobj)
-            urlobj.close()
         except:
             return None
+        finally:
+            urlobj.close()
 
         root = data.getroot()
         return DataContainer(root[0].attrib)

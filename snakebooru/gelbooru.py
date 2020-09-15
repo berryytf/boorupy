@@ -21,8 +21,8 @@ class Gelbooru:
 
         post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
         for i in range(len(response)):
-            temp_dict['post url'] = post_url + f'{response[i]["id"]}'
-            temp_dict['image url'] = response[i]['file_url']
+            temp_dict['post_url'] = post_url + f'{response[i]["id"]}'
+            temp_dict['image_url'] = response[i]['file_url']
             temp_dict['id'] = response[i]['id']
             image_list.append(temp_dict)
             temp_dict = dict()

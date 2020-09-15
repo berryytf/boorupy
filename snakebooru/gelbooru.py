@@ -2,6 +2,11 @@ import urllib.request as urlreq
 from random import randint
 from typing import *
 import xml.etree.ElementTree as ET
+import asyncio
+
+
+class ImageContainer:
+    pass
 
 class Gelbooru:
 
@@ -14,7 +19,7 @@ class Gelbooru:
         self.comment_url = 'https://gelbooru.com/index.php?page=dapi&s=comment&q=index'
     
     # Private function to create a post URL and a related image URL
-    def __link_images(self, response):
+    async def __link_images(self, response):
 
         image_list = []
         temp_dict = dict()
@@ -29,13 +34,13 @@ class Gelbooru:
 
         return image_list
 
-    def __tagifier(self, unformated_tags):
+    async def __tagifier(self, unformated_tags):
 
         fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
         return fixed_tags
     
     # Get a bunch of posts based on a limit and tags that the user enters.
-    def get_posts(self, tags='', limit=100):
+    async def get_posts(self, tags='', limit=100):
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it 
         e.g. (cat ears, blue eyes, rating:safe, -nude)
@@ -43,7 +48,7 @@ class Gelbooru:
         Regardless of limit, this should return a list'''
 
         posts = []
-        tags = self.__tagifier(tags)
+        tags = await self.__tagifier(tags)
         final_url = self.booru_url + f'&limit={limit}&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
         
         # This error should not ever happen.
@@ -80,17 +85,17 @@ class Gelbooru:
         for post in root:
             posts.append(post.attrib)
             
-        images = self.__link_images(posts)
+        images = await self.__link_images(posts)
         return images
 
     # Get a single image based on tags that the user enters.
-    def get_single_post(self, tags=''):
+    async def get_single_post(self, tags=''):
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it
         e.g. (cat ears, blue eyes, rating:safe, -nude)
         Has a hard limit of 1'''
 
-        tags = self.__tagifier(tags)
+        tags = await self.__tagifier(tags)
         posts = []
         final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}&api_key={self.api_key}&user_id={self.user_id}'
 
@@ -126,11 +131,11 @@ class Gelbooru:
             attempts += -1
         
         posts.append(root[randint(0, len(root)-1)].attrib)
-        image = self.__link_images(posts)
+        image = await self.__link_images(posts)
         return image[0]
     
     # Chooses an image out of 5000000+ images!
-    def get_random_post(self):
+    async def get_random_post(self):
         '''Simply, returns a random image out of 5000000+ possible images.'''
 
         posts = []
@@ -153,11 +158,11 @@ class Gelbooru:
             return None
         
         posts.append(root[0].attrib)
-        image = self.__link_images(posts)
+        image = await self.__link_images(posts)
         return image[0]
         
     # Get comments from a post using post_id
-    def get_comments(self, post_id):
+    async def get_comments(self, post_id):
         '''Pass in a post ID to get the comments for the post.
         If no comments are found, returns None.'''
 
@@ -186,7 +191,7 @@ class Gelbooru:
             return comment_list
     
     # Get data for a post
-    def get_post_data(self, post_id):
+    async def get_post_data(self, post_id):
         '''User can pass in a post ID to get all of its data'''
 
         data_url = f'https://gelbooru.com/index.php?page=dapi&s=post&q=index&id={post_id}'

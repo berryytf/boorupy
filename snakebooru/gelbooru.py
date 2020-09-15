@@ -247,7 +247,7 @@ class Gelbooru:
         return image[0]
         
     # Get comments from a post using post_id
-    async def get_comments(self, post_id):
+    async def get_comments(self, post_id) -> list:
         '''Pass in a post ID to get the comments for the post.
         If no comments are found, returns None.'''
 
@@ -282,7 +282,8 @@ class Gelbooru:
     
     # Get data for a post
     async def get_post_data(self, post_id) -> Optional[DataContainer]:
-        '''User can pass in a post ID to get all of its data'''
+        '''User can pass in a post ID to get all of its data
+        This function returns an object that has a few of its own functions'''
 
         endpoint = self.__endpoint('post')
         endpoint.args['id'] = post_id

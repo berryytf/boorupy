@@ -222,7 +222,7 @@ class Gelbooru:
         posts = []
         endpoint = self.__endpoint('post')
         endpoint.args['limit'] = 100
-        endpoint.args['pid'] = self.page_num
+        endpoint.args['pid'] = randint(0, 200)
     
         results = await self.__request(str(endpoint))
         results = ET.fromstring(results)

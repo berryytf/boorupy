@@ -92,7 +92,7 @@ class Gelbooru:
             code, response = await self.__fetch(session, url)
 
         if code not in [200, 201]:
-            raise Exception(f"""Site returned a non 200 status code: {response}""")
+            raise Exception(f'''Site returned a non 200 status code: {response}''')
 
         return response
 
@@ -119,7 +119,7 @@ class Gelbooru:
 
         post_url = 'https://gelbooru.com/index.php?page=post&s=view&id='
         for i in range(len(response)):
-            temp_dict['post_url'] = post_url + f'{response[i]["id"]}'
+            temp_dict['post_url'] = post_url + f'''{response[i]["id"]}'''
             temp_dict['image_url'] = response[i]['file_url']
             temp_dict['id'] = response[i]['id']
             image_list.append(temp_dict)
@@ -134,12 +134,21 @@ class Gelbooru:
     
     # Get a bunch of posts based on a limit and tags that the user enters.
     async def get_posts(self, tags='', limit=100, offset=0) -> list:
-        '''User can pass in tags separated by a comma
-        Preceding a tag with a dash will exclude it
-        e.g. ('cat ears, -blue eyes, rating:safe')
-        there is a default limit of 100 which is also the max limit
-        offset has a max of (100 - limit) + 200
-        Example: if the limit is 50, the offset can be 250'''
+        '''Raises:
+            Exception: Limit parameter cannot be greater than 100
+            Exception: Offset is too high
+
+        Keyword Arguments:
+            Tags (str, optional): Tags separated by a comma. Defaults to ''
+            Limit (int, optional): Limit number of posts. defaults to 100
+            Offset (int, optional): defaults to 0
+
+        Returns:
+            [type]: list
+
+        Notes:
+            If limit = 50 then offset can be 250'''
+
         if limit > 100:
             raise Exception('Limit parameter cannot be greater than 100')
         if offset > (100 - limit) + 200:
@@ -179,10 +188,11 @@ class Gelbooru:
     # Get a single image based on tags that the user enters.
     # Similar to get_random_post but you pass in tags
     async def get_single_post(self, tags='') -> dict:
-        '''User can pass in tags separated by a comma
-        Using a dash before a tag will exclude it
-        e.g. (cat ears, blue eyes, rating:safe, -nude)
-        Has a hard limit of 1'''
+        '''Keyword Arguments:
+            tags (str, optional): Tags separated by a comma. Defaults to ''.
+
+        Returns:
+            [type]: dict'''
 
         tags = self.__tagifier(tags)
         posts = []
@@ -217,7 +227,8 @@ class Gelbooru:
     
     # Random image :D
     async def get_random_post(self) -> dict:
-        '''Simply, returns a random image out of 5000000+ possible images.'''
+        '''Returns:
+            [type]: dict'''        
     
         posts = []
         endpoint = self.__endpoint('post')
@@ -233,8 +244,11 @@ class Gelbooru:
         
     # Get comments from a post using post_id
     async def get_comments(self, post_id) -> tuple:
-        '''Pass in a post ID to get the comments for the post.
-        If no comments are found, returns None.'''
+        '''Args:
+            post_id (int): post id
+
+        Returns:
+            [type]: tuple'''
 
         comment_list = []
         endpoint = self.__endpoint('comment')
@@ -262,8 +276,11 @@ class Gelbooru:
     
     # Get data for a post
     async def get_post_data(self, post_id) -> Optional[DataContainer]:
-        '''User can pass in a post ID to get all of its data
-        This function returns an object that has a few of its own functions'''
+        """Args:
+            post_id (int): post id
+
+        Returns:
+            DataContainer (object)"""        
 
         endpoint = self.__endpoint('post')
         endpoint.args['id'] = post_id

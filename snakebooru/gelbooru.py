@@ -1,9 +1,9 @@
-import urllib.request as urlreq
 from random import randint
 from typing import *
 import xml.etree.ElementTree as ET
 import asyncio
 from furl import furl
+import aiohttp
 
 '''Access Gelbooru's API'''
 
@@ -52,13 +52,19 @@ class DataContainer:
         
         return tuple(tags)
     
-    async def show_comments(self) -> list:
+    async def show_comments(self) -> tuple:
         if self.has_comments == 'false':
             return None
 
         comments = await Gelbooru().get_comments(self.id)
-        return comments
+        return tuple(comments)
     
+    # Each post has a full size image, sample image and preview image.
+    async def show_links(self) -> tuple:
+        links = (self.file_url, self.sample_url, self.preview_url)
+
+        return links
+
 class Gelbooru:
 
     def __init__(self, api_key: Optional[str] = None,
@@ -67,10 +73,22 @@ class Gelbooru:
 
         self.api_key        = api_key
         self.user_id        = user_id
-        self.page_num       = randint(0, 200)
         self.booru_url      = 'https://gelbooru.com/'
         self._loop = None
     
+    async def __fetch(self, session, url):
+        async with session.get(url) as response:
+            return response.status, await response.read()
+
+    async def __request(self, url):
+        async with aiohttp.ClientSession(loop=self._loop) as session:
+            code, response = await self.__fetch(session, url)
+
+        if code not in [200, 201]:
+            raise Exception(f"""Site returned a non 200 status code: {response}""")
+
+        return response
+
     def __endpoint(self, s) -> furl:
 
         endpoint = furl(self.booru_url)
@@ -108,60 +126,51 @@ class Gelbooru:
         return tags
     
     # Get a bunch of posts based on a limit and tags that the user enters.
-    async def get_posts(self, tags='', limit=100) -> list:
+    async def get_posts(self, tags='', limit=100, offset=0) -> list:
         '''User can pass in tags separated by a comma
-        Using a dash before a tag will exclude it 
-        e.g. (cat ears, blue eyes, rating:safe, -nude)
-        The limit parameter has a default value of 100
-        Regardless of limit, this should return a list'''
+        Preceding a tag with a dash will exclude it
+        e.g. ('cat ears, -blue eyes, rating:safe')
+        there is a default limit of 100 which is also the max limit
+        offset has a max of (100 - limit) + 200
+        Example: if the limit is 50, the offset can be 250'''
+        if limit > 100:
+            raise Exception('Limit parameter cannot be greater than 100')
+        if offset > (100 - limit) + 200:
+            raise Exception('Offset is too high.')
 
         posts = []
         tags = self.__tagifier(tags)
         endpoint = self.__endpoint('post')
         endpoint.args['limit'] = limit
-        endpoint.args['pid'] = self.page_num
-        endpoint.args['tags'] = tags
-
-        # This error should not ever happen.
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-            urlobj.close()
-        except ET.ParseError:
-            return None
-        finally:
-            root = data.getroot()
-
-        # Reduce search if length of root is 0. Gives up if pid=0 has 0 results 
+        endpoint.args['pid'] = offset
+        endpoint.args['tags'] = ' '.join(tags)
+        
+        results = await self.__request(str(endpoint))
+        results = ET.fromstring(results)
+        
         temp = 4
         attempts = 5
-        while len(root) == 0:
+        # Offset is randomly set between 0 and 4 until results are found
+        # If no results found at offset = 0: returns none
+        # This is so no results are missed if obscure tags are passed
+        while not results:
             if attempts == 0:
                 return None
-            else:
-                pass
-            self.page_num = randint(0, temp)
-            endpoint.args['pid'] = self.page_num
 
-            try:
-                urlobj = urlreq.urlopen(str(endpoint))
-                data = ET.parse(urlobj)
-                root = data.getroot()
-            except ET.ParseError:
-                return None
-            finally:
-                urlobj.close()
-            
+            endpoint.args['pid'] = randint(0, temp)
+            results = await self.__request(str(endpoint))
+            results = ET.fromstring(results)
             temp += -1
             attempts += -1
-
-        for post in root:
+        
+        for post in results:
             posts.append(post.attrib)
         
         images = self.__link_images(posts)
         return images
 
     # Get a single image based on tags that the user enters.
+    # Similar to get_random_post but you pass in tags
     async def get_single_post(self, tags='') -> dict:
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it
@@ -172,105 +181,69 @@ class Gelbooru:
         posts = []
         endpoint = self.__endpoint('post')
         endpoint.args['limit'] = 100
-        endpoint.args['pid'] = self.page_num
-        endpoint.args['tags'] = tags
+        # Random offset to get a random image based on tags
+        endpoint.args['pid'] = randint(0, 200)
+        endpoint.args['tags'] = ' '.join(tags)
 
-        # This error should not ever happen
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-            root = data.getroot()
-        except ET.ParseError:
-            return None
-        finally:
-            urlobj.close()
-        
-        # Reduce search if length of root is 0. Gives up if pid=0 has 0 results
+        results = await self.__request(str(endpoint))
+        results = ET.fromstring(results)
+
         temp = 4
         attempts = 5
-        while len(root) == 0:
+        # 
+        while not results:
             if attempts == 0:
                 return None
-            else:
-                pass
-            self.page_num = randint(0, temp)
-            endpoint.args['pid'] = self.page_num
 
-            try:
-                urlobj = urlreq.urlopen(str(endpoint))
-                data = ET.parse(urlobj)
-                root = data.getroot()
-            except ET.ParseError:
-                return None
-            finally:
-                urlobj.close()
-
+            endpoint.args['pid'] = randint(0, temp)
+            results = await self.__request(str(endpoint))
+            results = ET.fromstring(results)
             temp += -1
             attempts += -1
+
+        for post in results:
+            posts.append(post.attrib)
         
-        posts.append(root[randint(0, len(root)-1)].attrib)
+        posts = [posts[randint(0, len(results)-1)]]
         image = self.__link_images(posts)
         return image[0]
     
-    # Chooses an image out of 5000000+ images!
+    # Random image :D
     async def get_random_post(self) -> dict:
         '''Simply, returns a random image out of 5000000+ possible images.'''
     
         posts = []
         endpoint = self.__endpoint('post')
-        print(endpoint)
-        
-        # First request to obtain post count from the API
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-            root_temp = data.getroot()
-        except ET.ParseError:
-            return None
-        finally:
-            urlobj.close()
+        endpoint.args['limit'] = 100
+        endpoint.args['pid'] = self.page_num
+    
+        results = await self.__request(str(endpoint))
+        results = ET.fromstring(results)
 
-        # Second request to actually choose a random post
-        post_id = randint(1, int(root_temp.attrib['count']))
-        endpoint.args['id'] = post_id
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-            root = data.getroot()
-        except ET.ParseError:
-            return None
-        finally:
-            urlobj.close()
-
-        posts.append(root[0].attrib)
+        posts.append(results[randint(0,99)].attrib)
         image = self.__link_images(posts)
         return image[0]
         
     # Get comments from a post using post_id
-    async def get_comments(self, post_id) -> list:
+    async def get_comments(self, post_id) -> tuple:
         '''Pass in a post ID to get the comments for the post.
         If no comments are found, returns None.'''
 
         comment_list = []
         endpoint = self.__endpoint('comment')
         endpoint.args['post_id'] = post_id
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-        except:
-            return None
-        finally:
-            urlobj.close()
+    
+        results = await self.__request(str(endpoint))
+        results = ET.fromstring(results)
 
-        root = data.getroot()
         temp = dict()
         
         # Iterate through comments
-        for i in range(len(root)):
-            temp['id'] = root[i].attrib['id']
-            temp['author'] = root[i].attrib['creator']
-            temp['date'] = root[i].attrib['created_at']
-            temp['comment'] = root[i].attrib['body']
+        for i in range(len(results)):
+            temp['id'] = results[i].attrib['id']
+            temp['author'] = results[i].attrib['creator']
+            temp['date'] = results[i].attrib['created_at']
+            temp['comment'] = results[i].attrib['body']
 
             comment_list.append(temp)
             temp = dict()
@@ -278,7 +251,7 @@ class Gelbooru:
         if not comment_list:
             return None
         else:
-            return comment_list
+            return tuple(comment_list)
     
     # Get data for a post
     async def get_post_data(self, post_id) -> Optional[DataContainer]:
@@ -287,13 +260,8 @@ class Gelbooru:
 
         endpoint = self.__endpoint('post')
         endpoint.args['id'] = post_id
-        try:
-            urlobj = urlreq.urlopen(str(endpoint))
-            data = ET.parse(urlobj)
-        except:
-            return None
-        finally:
-            urlobj.close()
-
-        root = data.getroot()
-        return DataContainer(root[0].attrib)
+        
+        results = await self.__request(str(endpoint))
+        results = ET.fromstring(results)
+    
+        return DataContainer(results[0].attrib)

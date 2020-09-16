@@ -2,17 +2,30 @@ import urllib.request as urlreq
 from random import randint
 from typing import *
 import xml.etree.ElementTree as ET
+from furl import furl
+import asyncio
+
+class DataContainer:
+    pass
 
 class Safebooru:
     
     def __init__(self):
 
         self.page_num = randint(0, 200)
-        self.booru_url = 'https://safebooru.org/index.php?page=dapi&s=post&q=index'
-        self.comment_url = 'https://safebooru.org/index.php?page=dapi&s=comment&q=index'
+        self.booru_url = 'https://safebooru.org/'
+
+    def __endpoint(self, s) -> furl:
+
+        endpoint = furl(self.booru_url)
+        endpoint.args['page'] = 'dapi'
+        endpoint.args['s'] = s
+        endpoint.args['q'] = 'index'
+
+        return endpoint
 
     # Private function to link images from the various functions above.
-    def __link_images(self, response):
+    def __link_images(self, response) -> list:
 
         image_list = []
         temp_dict = dict()
@@ -29,13 +42,13 @@ class Safebooru:
         return image_list
 
     # Private function to fix tags so that they work with the image board
-    def __tagifier(self, unformated_tags):
+    def __tagifier(self, tags) -> list:
 
-        fixed_tags = unformated_tags.replace(', ', r'%20').replace(' ', '_').lower()
-        return fixed_tags
+        tags = [tag.strip().lower().replace(' ', '_') for tag in tags.split(', ')] if tags else []
+        return tags
 
     # Returns up too 100 posts and images based on tags the user inputs
-    def get_posts(self, tags='', limit=100):
+    async def get_posts(self, tags='', limit=100):
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it 
         e.g. (cat ears, -blue eyes)
@@ -45,19 +58,23 @@ class Safebooru:
 
         posts = []
         if limit > 100:
-            raise Exception("Limit cannot be greater than 100")
-
+            raise Exception("Limit parameter cannot be greater than 100")
         tags = self.__tagifier(tags)
-        final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
-        
+        endpoint = self.__endpoint('post')
+        endpoint.args['limit'] = limit
+        endpoint.args['tags'] = tags
+        endpoint.args['pid'] = self.page_num
+        print(endpoint)
+
         # This error should never happen
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
-            urlobj.close()
             root = data.getroot()
         except ET.ParseError:
-            return None        
+            return None      
+        finally:  
+            urlobj.close()
         
         temp = 4
         attempts = 5
@@ -67,15 +84,16 @@ class Safebooru:
             else:
                 pass
             self.page_num = randint(0, temp)
-            final_url = self.booru_url + f'&tags={tags}&limit={limit}&pid={self.page_num}'
+            endpoint.args['pid'] = self.page_num
             
             try:
-                urlobj = urlreq.urlopen(final_url)
+                urlobj = urlreq.urlopen(str(endpoint))
                 data = ET.parse(urlobj)
-                urlobj.close()
                 root = data.getroot()
             except ET.ParseError:
                 return None
+            finally:
+                urlobj.close()
             
             temp += -1
             attempts += -1
@@ -87,7 +105,7 @@ class Safebooru:
         return images
 
     # Return a single post and image based on tags the user inputs
-    def get_single_post(self, tags=''):
+    async def get_single_post(self, tags=''):
         '''User can pass in tags separated by a comma
         Using a dash before a tag will exclude it 
         e.g. (cat ears, -blue eyes)
@@ -95,15 +113,19 @@ class Safebooru:
 
         tags = self.__tagifier(tags)
         posts = []
-        final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}'
+        endpoint = self.__endpoint('post')
+        endpoint.args['limit'] = 100
+        endpoint.args['tags'] = tags
+        endpoint.args['pid'] = self.page_num
         
         try:
-            urlobj = urlreq.urlopen(final_url)
+            urlobj = urlreq.urlopen(str(endpoint))
             data = ET.parse(urlobj)
-            urlobj.close()
             root = data.getroot()
         except ET.ParseError:
             return None
+        finally:
+            urlobj.close()
 
         temp = 4
         attempts =5 
@@ -113,15 +135,16 @@ class Safebooru:
             else:
                 pass
             self.page_num = randint(0, temp)
-            final_url = self.booru_url + f'&limit=100&tags={tags}&pid={self.page_num}'
-            
+            endpoint.args['pid'] = self.page_num
+
             try:
-                urlobj = urlreq.urlopen(final_url)
+                urlobj = urlreq.urlopen(str(endpoint))
                 data = ET.parse(urlobj)
-                urlobj.close()
                 root = data.getroot()
             except ET.ParseError:
                 return None
+            finally:
+                urlobj.close()
             
             temp += -1
             attempts += -1
@@ -131,7 +154,7 @@ class Safebooru:
         return image
 
     # Selects from 3000000+ images!
-    def get_random_post(self):
+    async def get_random_post(self):
         '''Simply, returns a random image out of 3000000+ possible images'''
 
         posts = []
@@ -158,7 +181,7 @@ class Safebooru:
         return image[0]
 
     # Get data from a post
-    def get_post_data(self, post_id):
+    async def get_post_data(self, post_id):
         '''User can pass in a post ID to get all of its data'''
 
         data_url = f'https://safebooru.org/index.php?page=dapi&s=post&q=index&id={post_id}'

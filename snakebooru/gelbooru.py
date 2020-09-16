@@ -39,9 +39,12 @@ class DataContainer:
         
     async def show_all_data(self) -> dict:
         '''Get all data for post'''
+
         return self.data
     
     async def show_tags(self) -> tuple:
+        '''Get all tags for a post including the rating'''
+
         tags = self.tags.strip().split(' ')
         if self.rating == 's':
             tags.append('rating:safe')
@@ -53,6 +56,8 @@ class DataContainer:
         return tuple(tags)
     
     async def show_comments(self) -> tuple:
+        '''Get comments for a post'''
+
         if self.has_comments == 'false':
             return None
 
@@ -61,6 +66,8 @@ class DataContainer:
     
     # Each post has a full size image, sample image and preview image.
     async def show_links(self) -> tuple:
+        '''Get the different image urls for a post'''
+        
         links = (self.file_url, self.sample_url, self.preview_url)
 
         return links
